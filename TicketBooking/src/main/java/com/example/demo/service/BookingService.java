@@ -2,6 +2,8 @@ package com.example.demo.service;
 
 import java.util.List;
 
+import com.example.demo.dto.EventTicketDTO;
+import com.example.demo.exception.EventNotFoundException;
 import com.example.demo.exception.TicketNotFoundException;
 import com.example.demo.model.TicketBooking;
 
@@ -11,7 +13,13 @@ public interface BookingService {
 	
 	String cancelTicket(TicketBooking ticket);
 	
-	TicketBooking getTicketById(int ticketId) throws TicketNotFoundException;
+	EventTicketDTO getTicketById(int ticketId) throws TicketNotFoundException, EventNotFoundException;
 	
 	List<TicketBooking> viewAllTickets();
+	
+	List<Integer> getAllUserIdsByEventId(int eventId);
+	
+	void cancelTicketsByEventId(int eventId);
+	
+	List<TicketBooking> getBookingsByEventId(int eventId);
 }
