@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import com.example.demo.dto.EventUsersListDTO;
 
-@FeignClient(name="NOTIFICATIONS", path="/notifications")
+@FeignClient(name="NOTIFICATIONSANDREMAINDERS", path="/notifications")
 public interface NotificationClient {
 
 	@PostMapping("/sendNotifications")

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.dto.EventUsersListDTO;
 import com.example.demo.dto.UserNotificationDTO;
 import com.example.demo.model.Notification;
 import com.example.demo.service.NotificationService;
@@ -41,5 +42,10 @@ public class NotificationController {
 	@GetMapping("/getAll")
 	List<Notification> viewAllNotifications() {
 		return service.viewAllNotifications();
+	}
+
+	@PostMapping("/sendNotifications")
+	void sendNotifications(@RequestBody EventUsersListDTO eventUsersListDto) {
+		service.sendNotifications(eventUsersListDto);
 	}
 }

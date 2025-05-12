@@ -16,6 +16,8 @@ import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.model.UserDetails;
 import com.example.demo.service.UserService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -24,12 +26,12 @@ public class UserController {
 	UserService service;
 
 	@PostMapping("/add")
-	String addUser(@RequestBody UserDetails userDetails) {
+	String addUser(@Valid @RequestBody UserDetails userDetails) {
 		return service.addUser(userDetails);
 	}
 
 	@PutMapping("/update")
-	String updateUser(@RequestBody UserDetails userDetails) {
+	String updateUser(@Valid @RequestBody UserDetails userDetails) {
 		return service.updateUser(userDetails);
 	}
 
