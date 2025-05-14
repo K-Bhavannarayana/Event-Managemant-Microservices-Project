@@ -17,7 +17,7 @@ public class UserDetails {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "event_seq")
 	@SequenceGenerator(name = "event_seq", sequenceName = "event_sequence", initialValue = 2000, allocationSize = 1)
-	private int UserId;
+	private int userId;
 	@NotBlank(message = "Username cannot be empty")
     private String userName;
 

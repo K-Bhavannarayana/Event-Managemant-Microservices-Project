@@ -24,6 +24,7 @@ public class NotificationServiceImpl implements NotificationService{
 	
 	UserClient userClient;
 	
+	//Adds a new notification in table taking notification as input and returns string as output 
 	@Override
 	public String addNotification(Notification note) {
 		Notification n = repository.save(note);
@@ -35,17 +36,20 @@ public class NotificationServiceImpl implements NotificationService{
 		}
 	}
 
+	//This is to remove a notification by taking notification Id
 	@Override
 	public String removeNotification(int notificationId) {
 		repository.deleteById(notificationId);
 		return "Notification removed";
 	}
 
+	//This will be used to view all notifications
 	@Override
 	public List<Notification> viewAllNotifications() {
 		return repository.findAll();
 	}
 
+	//This is to display notification along with user details by taking notification Id as parameter
 	@Override
 	public UserNotificationDTO getNotification(int notificationId) {
 		Optional<Notification> optional = repository.findById(notificationId);
@@ -58,6 +62,7 @@ public class NotificationServiceImpl implements NotificationService{
 		return null;
 	}
 
+	//To send notifications to given users about changes in event, both event and user Id's list are passed
 	@Override
 	public void sendNotifications(EventUsersListDTO eventUsersListDto) {
 		Date date=new Date();

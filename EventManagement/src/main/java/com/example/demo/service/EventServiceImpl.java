@@ -30,6 +30,7 @@ public class EventServiceImpl implements EventService {
 	
 	FeedbackClient feedbackClient;
 
+	//Takes Event object as input and save it in database and returns a string
 	@Override
 	public String addEvent(Event event) {
 		Event e = repository.save(event);
@@ -40,6 +41,7 @@ public class EventServiceImpl implements EventService {
 		}
 	}
 
+	//Takes Event Object as input updates the details in the database and returns a string
 	@Override
 	public String updateEvent(Event event, String message){
 		Event event1 = repository.save(event);
@@ -49,6 +51,7 @@ public class EventServiceImpl implements EventService {
 	}
 
 	@Override
+	//Requires event Id and reason message to notify users and cancel the event 
 	public String deleteEvent(int eventId, String message) throws EventNotFoundException {
 		Optional<Event> optional = repository.findById(eventId);
 		if (optional.isPresent()) {
@@ -63,6 +66,7 @@ public class EventServiceImpl implements EventService {
 		}
 	}
 
+	//if present or future displays event details, else event rating and feedbacks are also displayed
 	@Override
 	public Object getEvent(int eventId) throws EventNotFoundException {
 		Optional<Event> optional = repository.findById(eventId);
@@ -79,11 +83,13 @@ public class EventServiceImpl implements EventService {
 		throw new EventNotFoundException("Event not found with given Event Id");
 	}
 
+	//Displays all event details
 	@Override
 	public List<Event> getAllEvents() {
 		return repository.findAll();
 	}
 
+	//Takes event Id and returns event and bookings of that particular event
 	@Override
 	public EventBookingsDTO getBookingsByEventId(int eventId) throws EventNotFoundException {
 		Optional<Event> optional = repository.findById(eventId);
@@ -93,6 +99,12 @@ public class EventServiceImpl implements EventService {
 		else {
 			throw new EventNotFoundException("Event not found with given Event Id");
 		}
+	}
+
+	@Override
+	public boolean getEventPresence(int eventId) {
+		Optional<Event> optional=repository.findById(eventId);
+		return optional.isPresent();
 	}
 
 }

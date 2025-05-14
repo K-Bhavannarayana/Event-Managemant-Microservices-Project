@@ -14,4 +14,6 @@ public interface EventClient {
 	@GetMapping("/getEventById/{eid}")
 	Event getEvent(@PathVariable("eid") int eventId) throws EventNotFoundException ;
 	
+	@GetMapping("/getEventPresence/{eid}")
+	boolean getEventPresence(@PathVariable("eid") int eventId);
 }

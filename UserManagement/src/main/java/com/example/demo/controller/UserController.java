@@ -2,7 +2,6 @@ package com.example.demo.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,12 +16,13 @@ import com.example.demo.model.UserDetails;
 import com.example.demo.service.UserService;
 
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 
 @RestController
 @RequestMapping("/user")
+@AllArgsConstructor
 public class UserController {
 
-	@Autowired
 	UserService service;
 
 	@PostMapping("/add")
@@ -48,6 +48,11 @@ public class UserController {
 	@GetMapping("/getAllUsers")
 	List<UserDetails> getAllUsersDetails() {
 		return service.getAllUsersDetails();
+	}
+	
+	@GetMapping("/getUserPresence/{uid}")
+	boolean getUserPresence(@PathVariable("uid") int userId) {
+		return service.getUserPresence(userId);
 	}
 }
 

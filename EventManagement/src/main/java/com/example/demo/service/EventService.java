@@ -19,4 +19,6 @@ public interface EventService {
 	List<Event> getAllEvents();
 	
 	EventBookingsDTO getBookingsByEventId(int eventId) throws EventNotFoundException;
+	
+	boolean getEventPresence(int eventId);
 }

@@ -3,20 +3,21 @@ package com.example.demo.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.model.UserDetails;
 import com.example.demo.repository.UserRepository;
 
+import lombok.AllArgsConstructor;
+
 @Service
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
-	@Autowired
 	UserRepository repository;
 
-	@Override
+	//Adds user details to database by taking UserDetails object as parameter and returns a string
 	public String addUser(UserDetails userDetails) {
 		UserDetails ud = repository.save(userDetails);
 		if (ud != null)
@@ -24,6 +25,7 @@ public class UserServiceImpl implements UserService {
 		return "Error saving the user";
 	}
 
+	//Updates user details to database by taking UserDetails object as parameter and returns a string
 	@Override
 	public String updateUser(UserDetails userDetails) {
 		UserDetails ud = repository.save(userDetails);
@@ -32,6 +34,7 @@ public class UserServiceImpl implements UserService {
 		return "Error Updating the user";
 	}
 
+	//
 	@Override
 	public UserDetails getUserDetails(int userId) throws UserNotFoundException {
 		Optional<UserDetails> optional = repository.findById(userId);
@@ -50,6 +53,12 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public List<UserDetails> getAllUsersDetails() {
 		return repository.findAll();
+	}
+
+	@Override
+	public boolean getUserPresence(int userId) {
+		Optional<UserDetails> optional=repository.findById(userId);
+		return optional.isPresent();
 	}
 
 }

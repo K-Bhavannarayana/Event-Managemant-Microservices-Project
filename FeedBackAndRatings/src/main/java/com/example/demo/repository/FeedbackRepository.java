@@ -1,6 +1,7 @@
 package com.example.demo.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,5 +16,7 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Integer> {
 
 	@Query("SELECT COALESCE(AVG(f.rating),0.0) FROM Feedback f where f.eventId= ?1 ")
 	float getEventRating(int eventId);
+
+	Optional<Feedback> findByEventIdAndUserId(int eventId, int userId);
 
 }

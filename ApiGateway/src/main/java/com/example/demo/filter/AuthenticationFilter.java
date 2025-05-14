@@ -11,15 +11,17 @@ import org.springframework.stereotype.Component;
 
 import com.example.demo.util.JwtUtil;
 
+import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @Component
+@AllArgsConstructor
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
-
-    @Autowired
+   
+	@Autowired
     private RouteValidator validator;
 
-    @Autowired
+	@Autowired
     private JwtUtil util;
 
     public static class Config {
@@ -58,22 +60,13 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             return chain.filter(exchange);
         };
     }
-
-//    private boolean isAuthorized(String role, String path, String method) {
-//        if ("ADMIN".equalsIgnoreCase(role)) {
-//            return path.startsWith("/employee") || path.startsWith("/department");
-//        } else if ("USER".equalsIgnoreCase(role)) {
-//            return (path.startsWith("/employee") || path.startsWith("/department")) && method.equalsIgnoreCase("GET");
-//        }
-//        return false;
-//    }
     
     private boolean isAuthorized(String role, String path, String method) {
         if ("ADMIN".equalsIgnoreCase(role)) {
-            // Admin has full access
+            // admin has full access
             return true;
         } else if ("ORGANISER".equalsIgnoreCase(role)) {
-            // Organiser can access event, user, booking, notifications, and feedback paths
+            // organiser can access event, user, booking, notifications, and feedback paths
             return path.startsWith("/event") || 
                    path.startsWith("/user/add") || 
                    path.startsWith("/user/getUserById") || 

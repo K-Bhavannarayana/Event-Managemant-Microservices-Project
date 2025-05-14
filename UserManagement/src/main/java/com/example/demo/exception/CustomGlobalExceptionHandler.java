@@ -1,7 +1,6 @@
 package com.example.demo.exception;
 
 import java.time.LocalDateTime;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,9 +22,8 @@ public class CustomGlobalExceptionHandler {
 		Map<String, Object> body = new HashMap<>();
 		body.put("timestamp", new Date());
 		// Get all errors
-		ex.getBindingResult().getAllErrors().forEach(error -> {
-				body.put(((FieldError)error).getField(),error.getDefaultMessage());
-			});
+		ex.getBindingResult().getAllErrors().forEach(error -> body.put(((FieldError)error).getField(),error.getDefaultMessage())
+			);
 		return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
 
 	}

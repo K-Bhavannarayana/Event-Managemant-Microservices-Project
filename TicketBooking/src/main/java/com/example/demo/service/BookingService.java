@@ -5,11 +5,12 @@ import java.util.List;
 import com.example.demo.dto.EventTicketDTO;
 import com.example.demo.exception.EventNotFoundException;
 import com.example.demo.exception.TicketNotFoundException;
+import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.model.TicketBooking;
 
 public interface BookingService {
 
-	String bookTicket(TicketBooking ticket);
+	String bookTicket(TicketBooking ticket) throws EventNotFoundException, UserNotFoundException;
 	
 	String cancelTicket(TicketBooking ticket);
 	
@@ -22,4 +23,6 @@ public interface BookingService {
 	void cancelTicketsByEventId(int eventId);
 	
 	List<TicketBooking> getBookingsByEventId(int eventId);
+	
+	boolean checkBooking(int userId,int eventId);
 }

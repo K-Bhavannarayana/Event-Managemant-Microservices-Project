@@ -16,5 +16,7 @@ public interface UserService {
 	String removeUser(int userId);
 
 	List<UserDetails> getAllUsersDetails();
+	
+	boolean getUserPresence(int userId);
 
 }

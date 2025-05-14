@@ -56,4 +56,8 @@ public class EventController {
 		return service.getBookingsByEventId(eventId);
 	}
 
+	@GetMapping("/getEventPresence/{eid}")
+	boolean getEventPresence(@PathVariable("eid") int eventId) {
+		return service.getEventPresence(eventId);
+	}
 }

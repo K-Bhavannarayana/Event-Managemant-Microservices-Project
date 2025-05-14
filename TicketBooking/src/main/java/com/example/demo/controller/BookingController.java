@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.dto.EventTicketDTO;
 import com.example.demo.exception.EventNotFoundException;
 import com.example.demo.exception.TicketNotFoundException;
+import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.model.TicketBooking;
 import com.example.demo.service.BookingService;
 
@@ -28,7 +29,7 @@ public class BookingController {
 	BookingService service;
 	
 	@PostMapping("/bookTicket")
-	String bookTicket(@Valid @RequestBody TicketBooking ticket) {
+	String bookTicket(@Valid @RequestBody TicketBooking ticket) throws EventNotFoundException, UserNotFoundException {
 		return service.bookTicket(ticket);
 	}
 	
@@ -60,6 +61,11 @@ public class BookingController {
 	@GetMapping("/getBookingsByEventId/{eid}")
 	List<TicketBooking> getBookingsByEventId(@PathVariable("eid") int eventId){
 		return service.getBookingsByEventId(eventId);
+	}
+	
+	@GetMapping("/checkBooking/{uid}/{eid}")
+	boolean checkBooking(@PathVariable("uid") int userId, @PathVariable("eid") int eventId) {
+		return service.checkBooking(userId, eventId);
 	}
 
 }
