@@ -3,6 +3,8 @@ package com.example.demo.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.Event;
@@ -19,92 +21,139 @@ import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor
-public class BookingServiceImpl implements BookingService{
+public class BookingServiceImpl implements BookingService {
 
-	BookingRepository repository;
-	
-	EventClient eventClient;
-	
-	UserClient userClient;
-	
-	//This will add ticket to database taking ticket object and returning string
-	@Override
-	public String bookTicket(TicketBooking ticket) throws EventNotFoundException, UserNotFoundException {
-		if(eventClient.getEventPresence(ticket.getEventId())) {
-			if(userClient.getUserPresence(ticket.getUserId())) {
-				Optional<TicketBooking> optional= repository.findByUserIdAndEventId(ticket.getUserId(),ticket.getEventId());
-				if(optional.isEmpty() || optional.get().getStatus().equals("cancelled")) {
-					TicketBooking tb = repository.save(ticket);
-					if(tb==ticket) {
-						return "Ticket booked successfully";
-					}
-					else {
-						return "No tickets left";
-					}
-				}
-				else {
-					return "Ticket already booked";
-				}
-			}
-			else {
-				throw new UserNotFoundException("User Not Found");
-			}
-		}
-		throw new EventNotFoundException("Event Not Found");
-	}
+    private static final Logger logger = LoggerFactory.getLogger(BookingServiceImpl.class);
 
-	//This method will change the status of ticket to cancelled based on ticket object
-	@Override
-	public String cancelTicket(TicketBooking ticket) {
-		repository.save(ticket);
-		return "Tickets canceled successfully";
-	}
+    BookingRepository repository;
+    EventClient eventClient;
+    UserClient userClient;
 
-	//This method will display ticket details along with event details by taking ticket Id parameter
-	@Override
-	public EventTicketDTO getTicketById(int ticketId) throws TicketNotFoundException, EventNotFoundException {
-		Optional<TicketBooking> optional = repository.findById(ticketId);
-		if(optional.isPresent()) {
-			TicketBooking ticket = optional.get();
-			int eventId = ticket.getEventId();
-			Event event = eventClient.getEvent(eventId);
-			return new EventTicketDTO(event,ticket);
-		}
-		else {
-			throw new TicketNotFoundException("Ticket not found with given ticket id");
-		}
-		
-	}
+    /**
+     * Books a ticket for an event if the event and user exist and the ticket is available.
+     * @param ticket The ticket booking request.
+     * @return Success or failure message based on ticket availability.
+     * @throws EventNotFoundException If the event does not exist.
+     * @throws UserNotFoundException If the user does not exist.
+     */
+    @Override
+    public String bookTicket(TicketBooking ticket) throws EventNotFoundException, UserNotFoundException {
+        logger.info("Attempting to book ticket for user ID {} at event ID {}", ticket.getUserId(), ticket.getEventId());
+        if (eventClient.getEventPresence(ticket.getEventId())) {
+            if (userClient.getUserPresence(ticket.getUserId())) {
+                Optional<TicketBooking> optional = repository.findByUserIdAndEventId(ticket.getUserId(), ticket.getEventId());
+                if (optional.isEmpty() || optional.get().getStatus().equals("cancelled")) {
+                    TicketBooking tb = repository.save(ticket);
+                    if (tb == ticket) {
+                        logger.info("Ticket booked successfully for user ID {} at event ID {}", ticket.getUserId(), ticket.getEventId());
+                        return "Ticket booked successfully";
+                    } else {
+                        logger.warn("No tickets left for event ID {}", ticket.getEventId());
+                        return "No tickets left";
+                    }
+                } else {
+                    logger.warn("User ID {} has already booked a ticket for event ID {}", ticket.getUserId(), ticket.getEventId());
+                    return "Ticket already booked";
+                }
+            } else {
+                logger.error("User ID {} not found", ticket.getUserId());
+                throw new UserNotFoundException("User Not Found");
+            }
+        }
+        logger.error("Event ID {} not found", ticket.getEventId());
+        throw new EventNotFoundException("Event Not Found");
+    }
 
-	//This will display all ticket details
-	@Override
-	public List<TicketBooking> viewAllTickets() {
-		return repository.findAll();
-	}
+    /**
+     * Cancels a booked ticket.
+     * @param ticket The ticket to be cancelled.
+     * @return Success message after cancellation.
+     */
+    @Override
+    public String cancelTicket(TicketBooking ticket) {
+        logger.info("Cancelling ticket ID {}", ticket.getTicketId());
+        repository.save(ticket);
+        logger.info("Tickets cancelled successfully for ticket ID {}", ticket.getTicketId());
+        return "Tickets canceled successfully";
+    }
 
-	//Returns all users based on their booking made made to that event based on event Id
-	@Override
-	public List<Integer> getAllUserIdsByEventId(int eventId) {
-		return repository.getAllUserIdsByEventId(eventId);
-	}
+    /**
+     * Retrieves ticket details along with event details by ticket ID.
+     * @param ticketId The ID of the ticket.
+     * @return Event and ticket details.
+     * @throws TicketNotFoundException If the ticket does not exist.
+     * @throws EventNotFoundException If the event does not exist.
+     */
+    @Override
+    public EventTicketDTO getTicketById(int ticketId) throws TicketNotFoundException, EventNotFoundException {
+        logger.info("Fetching ticket details for ticket ID {}", ticketId);
+        Optional<TicketBooking> optional = repository.findById(ticketId);
+        if (optional.isPresent()) {
+            TicketBooking ticket = optional.get();
+            Event event = eventClient.getEvent(ticket.getEventId());
+            logger.info("Ticket and event details retrieved for ticket ID {}", ticketId);
+            return new EventTicketDTO(event, ticket);
+        } else {
+            logger.error("Ticket ID {} not found", ticketId);
+            throw new TicketNotFoundException("Ticket not found with given ticket id");
+        }
+    }
 
-	//cancel tickets booked for a particular event based on event Id
-	@Override
-	public void cancelTicketsByEventId(int eventId) {
-		repository.cancelTicketsByEventId(eventId);
-	}
-	
-	//Returns bookings to a particular event based on event Id
-	@Override
-	public List<TicketBooking> getBookingsByEventId(int eventId){
-		return repository.findByEventId(eventId);
-	}
+    /**
+     * Retrieves all tickets from the database.
+     * @return List of all booked tickets.
+     */
+    @Override
+    public List<TicketBooking> viewAllTickets() {
+        logger.info("Fetching all tickets");
+        return repository.findAll();
+    }
 
-	@Override
-	public boolean checkBooking(int userId, int eventId) {
-		Optional<TicketBooking> optional = repository.findByUserIdAndEventId(userId, eventId);
-		return optional.isPresent();
-	}
-	
+    /**
+     * Retrieves all user IDs who have booked tickets for a particular event.
+     * @param eventId The ID of the event.
+     * @return List of user IDs.
+     */
+    @Override
+    public List<Integer> getAllUserIdsByEventId(int eventId) {
+        logger.info("Fetching all user IDs for event ID {}", eventId);
+        return repository.getAllUserIdsByEventId(eventId);
+    }
 
+    /**
+     * Cancels all tickets booked for a specific event.
+     * @param eventId The ID of the event.
+     */
+    @Override
+    public void cancelTicketsByEventId(int eventId) {
+        logger.info("Cancelling all tickets for event ID {}", eventId);
+        repository.cancelTicketsByEventId(eventId);
+        logger.info("All tickets cancelled for event ID {}", eventId);
+    }
+
+    /**
+     * Retrieves all ticket bookings for a particular event.
+     * @param eventId The ID of the event.
+     * @return List of ticket bookings.
+     */
+    @Override
+    public List<TicketBooking> getBookingsByEventId(int eventId) {
+        logger.info("Fetching ticket bookings for event ID {}", eventId);
+        return repository.findByEventId(eventId);
+    }
+
+    /**
+     * Checks if a user has a booking for a specific event.
+     * @param userId The ID of the user.
+     * @param eventId The ID of the event.
+     * @return True if the user has a booking, false otherwise.
+     */
+    @Override
+    public boolean checkBooking(int userId, int eventId) {
+        logger.info("Checking ticket booking status for user ID {} at event ID {}", userId, eventId);
+        Optional<TicketBooking> optional = repository.findByUserIdAndEventId(userId, eventId);
+        boolean isBooked = optional.isPresent();
+        logger.info("Ticket booking presence for user ID {} at event ID {}: {}", userId, eventId, isBooked);
+        return isBooked;
+    }
 }
