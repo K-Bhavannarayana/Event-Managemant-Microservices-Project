@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.EventBookingsDTO;
@@ -22,89 +24,139 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class EventServiceImpl implements EventService {
 
-	EventRepository repository;
-	
-	TicketBookingClient ticketBookingClient;
-	
-	NotificationClient notificationClient;
-	
-	FeedbackClient feedbackClient;
+    private static final Logger logger = LoggerFactory.getLogger(EventServiceImpl.class);
 
-	//Takes Event object as input and save it in database and returns a string
-	@Override
-	public String addEvent(Event event) {
-		Event e = repository.save(event);
-		if (e == event) {
-			return "Event Details Saved Successfully";
-		} else {
-			return "Event Details Not Saved";
-		}
-	}
+    EventRepository repository;
+    TicketBookingClient ticketBookingClient;
+    NotificationClient notificationClient;
+    FeedbackClient feedbackClient;
 
-	//Takes Event Object as input updates the details in the database and returns a string
-	@Override
-	public String updateEvent(Event event, String message){
-		Event event1 = repository.save(event);
-		List<Integer> usersList = ticketBookingClient.getAllUserIdsByEventId(event.getEventId());
-		notificationClient.sendNotifications(new EventUsersListDTO(event1,usersList,message));
-		return "Event Details Updated Successfully";
-	}
+    /**
+     * Adds a new event to the database.
+     * @param event The event object to be saved.
+     * @return Success message if saved successfully, otherwise failure message.
+     */
+    @Override
+    public String addEvent(Event event) {
+        logger.info("Adding event: {}", event);
+        Event e = repository.save(event);
+        if (e == event) {
+            logger.info("Event details saved successfully");
+            return "Event Details Saved Successfully";
+        } else {
+            logger.warn("Event details not saved");
+            return "Event Details Not Saved";
+        }
+    }
+    
+    /**
+     * Updates an existing event's details and sends notifications to users.
+     * @param event The updated event object.
+     * @param message Notification message for users.
+     * @return Success message after updating the event.
+     */
+    @Override
+    public String updateEvent(Event event, String message) {
+        logger.info("Updating event: {}", event);
+        Event event1 = repository.save(event);
+        List<Integer> usersList = ticketBookingClient.getAllUserIdsByEventId(event.getEventId());
+        notificationClient.sendNotifications(new EventUsersListDTO(event1, usersList, message));
+        logger.info("Event details updated successfully");
+        return "Event Details Updated Successfully";
+    }
 
-	@Override
-	//Requires event Id and reason message to notify users and cancel the event 
-	public String deleteEvent(int eventId, String message) throws EventNotFoundException {
-		Optional<Event> optional = repository.findById(eventId);
-		if (optional.isPresent()) {
-			List<Integer> usersList = ticketBookingClient.getAllUserIdsByEventId(eventId);
-			Event event = optional.get();
-			notificationClient.sendNotifications(new EventUsersListDTO(event,usersList,message));
-			ticketBookingClient.cancelTicketsByEventId(eventId);
-			repository.deleteById(eventId);
-			return "Event Deleted";
-		} else {
-			throw new EventNotFoundException("Event not found with given Event Id");
-		}
-	}
+    /**
+     * Deletes an event by ID, notifies users, and cancels tickets.
+     * @param eventId The ID of the event to delete.
+     * @param message Cancellation reason to notify users.
+     * @return Success message if the event is deleted.
+     * @throws EventNotFoundException if the event does not exist.
+     */
+    @Override
+    public String deleteEvent(int eventId, String message) throws EventNotFoundException {
+        logger.info("Deleting event with ID: {}", eventId);
+        Optional<Event> optional = repository.findById(eventId);
+        if (optional.isPresent()) {
+            Event event = optional.get();
+            logger.info("Event found: {}", event);
+            List<Integer> usersList = ticketBookingClient.getAllUserIdsByEventId(eventId);
+            notificationClient.sendNotifications(new EventUsersListDTO(event, usersList, message));
+            ticketBookingClient.cancelTicketsByEventId(eventId);
+            repository.deleteById(eventId);
+            logger.info("Event deleted successfully");
+            return "Event Deleted";
+        } else {
+            logger.error("Event not found with ID: {}", eventId);
+            throw new EventNotFoundException("Event not found with given Event Id");
+        }
+    }
 
-	//if present or future displays event details, else event rating and feedbacks are also displayed
-	@Override
-	public Object getEvent(int eventId) throws EventNotFoundException {
-		Optional<Event> optional = repository.findById(eventId);
-		if (optional.isPresent()) {
-			Event event = optional.get();
-			Date currentDate = new Date();
-			if(event.getEventDate().before(currentDate)) {
-				return new EventFeedbackRatingDTO(event,feedbackClient.getEventRating(eventId),feedbackClient.getAllFeedbacksByEventId(eventId));
-			}
-			else {
-				return optional.get();
-			}
-		}
-		throw new EventNotFoundException("Event not found with given Event Id");
-	}
+    /**
+     * Retrieves an event by ID. If the event has already occurred, fetches feedback and ratings.
+     * @param eventId The ID of the event to retrieve.
+     * @return Event details if the event is upcoming, or feedback and ratings if the event is past.
+     * @throws EventNotFoundException if the event does not exist.
+     */
+    @Override
+    public Object getEvent(int eventId) throws EventNotFoundException {
+        logger.info("Fetching event with ID: {}", eventId);
+        Optional<Event> optional = repository.findById(eventId);
+        if (optional.isPresent()) {
+            Event event = optional.get();
+            Date currentDate = new Date();
+            if (event.getEventDate().before(currentDate)) {
+                logger.info("Fetching feedback and rating for past event ID: {}", eventId);
+                return new EventFeedbackRatingDTO(event, feedbackClient.getEventRating(eventId),
+                        feedbackClient.getAllFeedbacksByEventId(eventId));
+            } else {
+                logger.info("Returning upcoming event details");
+                return event;
+            }
+        }
+        logger.error("Event not found with ID: {}", eventId);
+        throw new EventNotFoundException("Event not found with given Event Id");
+    }
 
-	//Displays all event details
-	@Override
-	public List<Event> getAllEvents() {
-		return repository.findAll();
-	}
+    /**
+     * Retrieves all events from the database.
+     * @return List of all available events.
+     */
+    @Override
+    public List<Event> getAllEvents() {
+        logger.info("Fetching all events");
+        return repository.findAll();
+    }
 
-	//Takes event Id and returns event and bookings of that particular event
-	@Override
-	public EventBookingsDTO getBookingsByEventId(int eventId) throws EventNotFoundException {
-		Optional<Event> optional = repository.findById(eventId);
-		if (optional.isPresent()) {
-			return new EventBookingsDTO(optional.get(), ticketBookingClient.getBookingsByEventId(eventId));
-		}
-		else {
-			throw new EventNotFoundException("Event not found with given Event Id");
-		}
-	}
+    /**
+     * Retrieves event bookings by event ID.
+     * @param eventId The ID of the event.
+     * @return Event details along with associated bookings.
+     * @throws EventNotFoundException if the event does not exist.
+     */
+    @Override
+    public EventBookingsDTO getBookingsByEventId(int eventId) throws EventNotFoundException {
+        logger.info("Fetching bookings for event ID: {}", eventId);
+        Optional<Event> optional = repository.findById(eventId);
+        if (optional.isPresent()) {
+            logger.info("Returning bookings for event ID: {}", eventId);
+            return new EventBookingsDTO(optional.get(), ticketBookingClient.getBookingsByEventId(eventId));
+        } else {
+            logger.error("Event not found with ID: {}", eventId);
+            throw new EventNotFoundException("Event not found with given Event Id");
+        }
+    }
 
-	@Override
-	public boolean getEventPresence(int eventId) {
-		Optional<Event> optional=repository.findById(eventId);
-		return optional.isPresent();
-	}
-
+    /**
+     * Checks if an event with the given ID is present in the database.
+     * @param eventId The ID of the event to check.
+     * @return True if the event exists, false otherwise.
+     */
+    @Override
+    public boolean getEventPresence(int eventId) {
+        logger.info("Checking presence of event ID: {}", eventId);
+        Optional<Event> optional = repository.findById(eventId);
+        boolean present = optional.isPresent();
+        logger.info("Event presence status for ID {}: {}", eventId, present);
+        return present;
+    }
 }
